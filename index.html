@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sheet Display</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      display:flex; align-items:center; justify-content:center;
+      height:100vh; margin:0; background:#111; color:#fff;
+    }
+    .card {
+      background:#0f1724;
+      padding:28px;
+      border-radius:12px;
+      box-shadow:0 6px 24px rgba(0,0,0,.6);
+      min-width:320px;
+      text-align:center;
+    }
+    .row {
+      font-size:2rem;
+      margin:8px 0;
+      padding:8px 12px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.03);
+    }
+    .muted {
+      font-size:.9rem;
+      color:#6b7280;
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="muted">Last updated: <span id="updated">—</span></div>
+  </div>
+
+<script>
+const CSV_ORIGINAL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayrNJWd-7UYiGRTzwvS--r9e4RJh7quFCABor99KqcT0PF3erjKFjVMOkztETC696pEfoF93D3FaQ/pub?output=csv"; // ← replace with your CSV URL
+const CSV_BASE_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent(CSV_ORIGINAL_URL);
+const REFRESH_MS = 60_000; // refresh interval
+
+function parseCSV(text) {
+  return text.trim().split(/\r?\n/).map(line => line.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+}
+
+async function update() {
+  try {
+    // Fetch the CSV via CORS proxy
+    const CSV_URL = CSV_BASE_URL + "&_=" + Date.now(); // cache-busting
+    const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error("Fetch error: " + res.status);
+    const txt = await res.text();
+    const table = parseCSV(txt);
+
+    const card = document.getElementById("card");
+
+    // Remove old rows except the last "Last updated" div
+    card.querySelectorAll(".row").forEach(el => el.remove());
+
+    // Add a row for each line in the sheet
+    table.forEach((rowData) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.textContent = rowData.join(" \u2022 ") || "—";
+      card.insertBefore(row, card.lastElementChild); // insert above timestamp
+    });
+
+    document.getElementById("updated").textContent = new Date().toLocaleString();
+  } catch (err) {
+    // Clear previous rows
+    document.querySelectorAll(".row").forEach(el => el.remove());
+    
+    const card = document.getElementById("card");
+    const errorRow = document.createElement("div");
+    errorRow.clas
