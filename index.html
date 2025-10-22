@@ -16,11 +16,13 @@
   <div class="card">
     <div id="r1" class="row">Loading…</div>
     <div id="r2" class="row"> </div>
+    <div id="r3" class="row"> </div>
+    <div id="r4" class="row"> </div>
     <div class="muted">Last updated: <span id="updated">—</span></div>
   </div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayrNJWd-7UYiGRTzwvS--r9e4RJh7quFCABor99KqcT0PF3erjKFjVMOkztETC696pEfoF93D3FaQ/pub?gid=0&single=true&output=csv"; // ← replace with the URL from Google Sheets
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayrNJWd-7UYiGRTzwvS--r9e4RJh7quFCABor99KqcT0PF3erjKFjVMOkztETC696pEfoF93D3FaQ/pub?gid=0&single=true&output=csv"; 
 const REFRESH_MS = 60_000; // refresh interval in ms
 
 function parseCSV(text) {
@@ -36,23 +38,25 @@ async function update() {
     const table = parseCSV(txt);
 
     // Adjust indices if your sheet has a header row.
-    // If header present and your rows are 2 and 3, change 0->1 and 1->2.
     const r1 = (table[0] || []).join(" \u2022 ");
     const r2 = (table[1] || []).join(" \u2022 ");
+    const r3 = (table[2] || []).join(" \u2022 ");
+    const r4 = (table[3] || []).join(" \u2022 ");
 
     document.getElementById("r1").textContent = r1 || "—";
     document.getElementById("r2").textContent = r2 || "—";
+    document.getElementById("r3").textContent = r3 || "—";
+    document.getElementById("r4").textContent = r4 || "—";
     document.getElementById("updated").textContent = new Date().toLocaleString();
   } catch (err) {
     document.getElementById("r1").textContent = "Error loading sheet";
     document.getElementById("r2").textContent = err.message || "";
+    document.getElementById("r3").textContent = "";
+    document.getElementById("r4").textContent = "";
     document.getElementById("updated").textContent = "—";
     console.error(err);
   }
 }
 
 update();
-setInterval(update, REFRESH_MS);
-</script>
-</body>
-</html>
+setInterval(up
