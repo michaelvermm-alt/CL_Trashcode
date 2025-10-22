@@ -5,37 +5,52 @@
   <title>Sheet Display</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; display:flex;align-items:center;justify-content:center;
-           height:100vh; margin:0; background:#111; color:#fff; }
-    .card { background:#0f1724; padding:28px; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,.6); min-width:320px; text-align:center;}
-    .row { font-size:2rem; margin:8px 0; padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.03); }
-    .muted { font-size:.9rem; color:#6b7280; margin-top:10px; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      display:flex; align-items:center; justify-content:center;
+      height:100vh; margin:0; background:#111; color:#fff;
+    }
+    .card {
+      background:#0f1724;
+      padding:28px;
+      border-radius:12px;
+      box-shadow:0 6px 24px rgba(0,0,0,.6);
+      min-width:320px;
+      text-align:center;
+    }
+    .row {
+      font-size:2rem;
+      margin:8px 0;
+      padding:8px 12px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.03);
+    }
+    .muted {
+      font-size:.9rem;
+      color:#6b7280;
+      margin-top:10px;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div id="r1" class="row">Loading…</div>
-    <div id="r2" class="row"> </div>
-    <div id="r3" class="row"> </div>
-    <div id="r4" class="row"> </div>
+  <div class="card" id="card">
     <div class="muted">Last updated: <span id="updated">—</span></div>
   </div>
 
 <script>
-const CSV_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayrNJWd-7UYiGRTzwvS--r9e4RJh7quFCABor99KqcT0PF3erjKFjVMOkztETC696pEfoF93D3FaQ/pub?output=csv"; 
-const REFRESH_MS = 60_000; // refresh interval in ms
+const CSV_ORIGINAL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayrNJWd-7UYiGRTzwvS--r9e4RJh7quFCABor99KqcT0PF3erjKFjVMOkztETC696pEfoF93D3FaQ/pub?output=csv"; // ← replace with your CSV URL
+const CSV_BASE_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent(CSV_ORIGINAL_URL);
+const REFRESH_MS = 60_000; // refresh interval
 
 function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  return lines.map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+  return text.trim().split(/\r?\n/).map(line => line.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
 }
 
 async function update() {
   try {
-    // Add timestamp to URL to bypass cache
-    const CSV_URL = CSV_BASE_URL + "&_=" + Date.now();
-
-    const res = await fetch(CSV_URL, {cache: "no-store"});
+    // Fetch the CSV via CORS proxy
+    const CSV_URL = CSV_BASE_URL + "&_=" + Date.now(); // cache-busting
+    const res = await fetch(CSV_URL);
     if (!res.ok) throw new Error("Fetch error: " + res.status);
     const txt = await res.text();
     const table = parseCSV(txt);
@@ -50,7 +65,7 @@ async function update() {
       const row = document.createElement("div");
       row.className = "row";
       row.textContent = rowData.join(" \u2022 ") || "—";
-      card.insertBefore(row, card.lastElementChild); // Insert above the "Last updated" div
+      card.insertBefore(row, card.lastElementChild); // insert above timestamp
     });
 
     document.getElementById("updated").textContent = new Date().toLocaleString();
@@ -60,17 +75,4 @@ async function update() {
     
     const card = document.getElementById("card");
     const errorRow = document.createElement("div");
-    errorRow.className = "row";
-    errorRow.textContent = "Error loading sheet: " + (err.message || "");
-    card.insertBefore(errorRow, card.lastElementChild);
-
-    document.getElementById("updated").textContent = "—";
-    console.error(err);
-  }
-}
-
-update();
-setInterval(update, REFRESH_MS);
-</script>
-</body>
-</html>
+    errorRow.clas
