@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sheet Display</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; display:flex;align-items:center;justify-content:center;
+           height:100vh; margin:0; background:#111; color:#fff; }
+    .card { background:#0f1724; padding:28px; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,.6); min-width:320px; text-align:center;}
+    .row { font-size:2rem; margin:8px 0; padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.03); }
+    .muted { font-size:.9rem; color:#6b7280; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="r1" class="row">Loading…</div>
+    <div id="r2" class="row"> </div>
+    <div class="muted">Last updated: <span id="updated">—</span></div>
+  </div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRayrNJWd-7UYiGRTzwvS--r9e4RJh7quFCABor99KqcT0PF3erjKFjVMOkztETC696pEfoF93D3FaQ/pub?gid=0&single=true&output=csv"; // ← replace with the URL from Google Sheets
+const REFRESH_MS = 60_000; // refresh interval in ms
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  return lines.map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+}
+
+async function update() {
+  try {
+    const res = await fetch(CSV_URL, {cache: "no-store"});
+    if (!res.ok) throw new Error("Fetch error: " + res.status);
+    const txt = await res.text();
+    const table = parseCSV(txt);
+
+    // Adjust indices if your sheet has a header row.
+    // If header present and your rows are 2 and 3, change 0->1 and 1->2.
+    const r1 = (table[0] || []).join(" \u2022 ");
+    const r2 = (table[1] || []).join(" \u2022 ");
+
+    document.getElementById("r1").textContent = r1 || "—";
+    document.getElementById("r2").textContent = r2 || "—";
+    document.getElementById("updated").textContent = new Date().toLocaleString();
+  } catch (err) {
+    document.getElementById("r1").textContent = "Error loading sheet";
+    document.getElementById("r2").textContent = err.message || "";
+    document.getElementById("updated").textContent = "—";
+    console.error(err);
+  }
+}
+
+update();
+setInterval(update, REFRESH_MS);
+</script>
+</body>
+</html>
